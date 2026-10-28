@@ -1,0 +1,6 @@
+{
+  "name": "SmartLearn AI — AI-Powered Learning Assistant",
+  "description": "An interactive AI learning assistant for students featuring an AI Tutor, Practice Quiz Generator, and Study Notes creator tailored for JHS, SHS, and college learners.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
