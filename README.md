@@ -146,6 +146,32 @@ Your code will now be visible on GitHub with clean commits, structured files, an
 
 ---
 
+## ⚡ Deploying to Vercel
+
+SmartLearn AI is designed as a hybrid architecture: it functions as a long-running Express server in Google AI Studio / local Node, and as serverless functions on Vercel via `/api/index.ts` and `vercel.json`.
+
+### Step 1: Configure Environment Variables in Vercel
+In your Vercel Project Dashboard:
+1. Go to **Settings** &rarr; **Environment Variables**.
+2. Add a new variable:
+   - **Key:** `GEMINI_API_KEY`
+   - **Value:** Your Google Gemini API Key (obtained from [Google AI Studio](https://aistudio.google.com/)).
+   - **Environments:** Check **Production**, **Preview**, and **Development**.
+3. Click **Save**.
+
+### Step 2: Push the Vercel Files to GitHub
+Ensure the new `vercel.json` and `api/index.ts` files are committed and pushed:
+```bash
+git add .
+git commit -m "feat: configure Vercel serverless functions and routing"
+git push origin main
+```
+
+### Step 3: Trigger a Redeploy
+If a deployment was already created before setting environment variables, click **Redeploy** (with *Use existing Build Cache* **unchecked**) in the Vercel dashboard.
+
+---
+
 ## 🧪 Testing & Verification
 
 To verify the project is working properly:

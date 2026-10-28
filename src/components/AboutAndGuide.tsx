@@ -226,6 +226,46 @@ npm run dev`;
         </div>
       </div>
 
+      {/* Vercel Deployment Instructions */}
+      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+        <h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
+          <Layers className="w-5 h-5 text-indigo-600" /> Deploying to Vercel
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+          SmartLearn AI is configured to run seamlessly both in Google AI Studio / local Node (as a persistent server) and on <strong>Vercel</strong> (as serverless API functions via <code className="bg-slate-100 px-1 py-0.5 rounded font-mono">/api/index.ts</code> and <code className="bg-slate-100 px-1 py-0.5 rounded font-mono">vercel.json</code>).
+        </p>
+
+        <div className="space-y-3 text-xs sm:text-sm">
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+            <span className="font-bold text-slate-900 block">1. Add Environment Variable in Vercel</span>
+            <p className="text-slate-600 text-xs">
+              Open your project on <a href="https://vercel.com" target="_blank" rel="noreferrer" className="text-indigo-600 font-semibold underline">vercel.com</a> &rarr; <strong>Settings</strong> &rarr; <strong>Environment Variables</strong>.
+            </p>
+            <p className="text-slate-800 text-xs font-mono bg-white p-2 rounded border border-slate-200 mt-1">
+              Key: <span className="font-bold text-indigo-700">GEMINI_API_KEY</span><br />
+              Value: <span className="text-slate-500">[Paste your API key from Google AI Studio]</span>
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+            <span className="font-bold text-slate-900 block">2. Push the Latest Code to GitHub</span>
+            <p className="text-slate-600 text-xs">
+              Commit the new <code className="font-mono bg-slate-100 px-1 py-0.5 rounded">vercel.json</code> and <code className="font-mono bg-slate-100 px-1 py-0.5 rounded">api/index.ts</code> files to your repository:
+            </p>
+            <p className="text-slate-800 text-xs font-mono bg-slate-900 text-slate-100 p-2.5 rounded mt-1">
+              git add . && git commit -m &quot;feat: add vercel serverless support&quot; && git push
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+            <span className="font-bold text-slate-900 block">3. Redeploy</span>
+            <p className="text-slate-600 text-xs">
+              Vercel will automatically build the frontend and deploy the serverless functions under <code className="font-mono bg-slate-100 px-1 py-0.5 rounded">/api/*</code>.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Local Development & Setup */}
       <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
         <h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
