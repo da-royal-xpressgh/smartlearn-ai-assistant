@@ -5,6 +5,33 @@ export interface ChatMessagePayload {
   content: string;
 }
 
+function parseErrorMessage(data: any, status: number): string {
+  if (data?.error) {
+    if (typeof data.error === 'string') {
+      try {
+        const parsed = JSON.parse(data.error);
+        if (parsed?.error?.message) return parsed.error.message;
+      } catch {
+        // Not a JSON string
+      }
+      return data.error;
+    }
+    if (data.error?.message) {
+      return data.error.message;
+    }
+  }
+
+  if (status === 404) {
+    return 'The requested learning service is currently initializing or unreachable. Please refresh and try again.';
+  }
+
+  if (status === 503) {
+    return 'The AI service is currently experiencing high demand. Please try again in a few moments.';
+  }
+
+  return `Service error (status ${status}). Please try again.`;
+}
+
 export async function checkServerHealth(): Promise<{ status: string; hasApiKey: boolean }> {
   try {
     const res = await fetch('/api/health');
@@ -37,8 +64,7 @@ export async function askAITutor(
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const errorMessage = data?.error || `Server responded with status ${response.status}`;
-    throw new Error(errorMessage);
+    throw new Error(parseErrorMessage(data, response.status));
   }
 
   return data?.reply || 'No response generated.';
@@ -66,8 +92,7 @@ export async function generateQuizAPI(
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const errorMessage = data?.error || `Failed to generate quiz (status ${response.status})`;
-    throw new Error(errorMessage);
+    throw new Error(parseErrorMessage(data, response.status));
   }
 
   if (!data?.questions || !Array.isArray(data.questions)) {
@@ -97,8 +122,7 @@ export async function generateStudyNotesAPI(
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const errorMessage = data?.error || `Failed to generate study notes (status ${response.status})`;
-    throw new Error(errorMessage);
+    throw new Error(parseErrorMessage(data, response.status));
   }
 
   if (!data?.summary || !data?.keyPoints) {

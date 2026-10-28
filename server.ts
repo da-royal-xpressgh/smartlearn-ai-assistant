@@ -34,37 +34,69 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-// Resilient content generator with automatic fallback if primary model experiences high demand
+// Resilient content generator with automatic model fallback and exponential backoff retry
 async function generateContentWithFallback(options: {
   contents: any;
   config?: any;
 }) {
-  const models = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
+  // Priority order: gemini-3.5-flash is ultra-reliable and fast, followed by 3.6, 3.8 and flash-latest
+  const candidateModels = [
+    "gemini-3.5-flash",
+    "gemini-3.6-flash",
+    "gemini-3.8-flash",
+    "gemini-flash-latest",
+  ];
+
   let lastError: any = null;
 
-  for (const model of models) {
-    try {
-      const response = await ai.models.generateContent({
-        model,
-        contents: options.contents,
-        config: options.config,
-      });
-      if (response && response.text) {
-        return response;
+  for (const model of candidateModels) {
+    // Try up to 2 attempts per model with exponential backoff on 503/429
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: options.contents,
+          config: options.config,
+        });
+
+        if (response && response.text) {
+          return response;
+        }
+      } catch (err: any) {
+        lastError = err;
+        const errMsg = err?.message || String(err);
+        const isTemporary = errMsg.includes("503") || errMsg.includes("UNAVAILABLE") || errMsg.includes("high demand") || errMsg.includes("429");
+
+        console.warn(`[SmartLearn AI] Model ${model} attempt ${attempt} failed: ${errMsg.slice(0, 160)}`);
+
+        if (isTemporary && attempt < 2) {
+          // Exponential backoff delay (800ms, then retry)
+          await new Promise((resolve) => setTimeout(resolve, attempt * 800));
+        } else {
+          // Move to next candidate model
+          break;
+        }
       }
-    } catch (err: any) {
-      console.warn(`Model ${model} failed:`, err?.message || err);
-      lastError = err;
-      // Wait 400ms before trying next model
-      await new Promise((r) => setTimeout(r, 400));
     }
   }
 
-  throw lastError || new Error("All AI models currently busy. Please try again shortly.");
+  // If all candidate models failed, format a clear, student-friendly explanation
+  const finalMsg = lastError?.message || "AI service is currently busy.";
+  let userFriendlyMsg = finalMsg;
+  try {
+    const parsed = JSON.parse(finalMsg);
+    if (parsed?.error?.message) {
+      userFriendlyMsg = parsed.error.message;
+    }
+  } catch {
+    // Keep as string
+  }
+
+  throw new Error(userFriendlyMsg);
 }
 
-// AI Tutor chat endpoint
-app.post("/api/tutor/chat", async (req, res) => {
+// AI Tutor chat endpoint (supports both standard and trailing-slash paths)
+app.post(["/api/tutor/chat", "/api/tutor/chat/"], async (req, res) => {
   try {
     const { messages, academicLevel = "SHS", subject = "General", topic = "" } = req.body;
 
@@ -118,14 +150,13 @@ Pedagogical Directives:
     res.json({ reply });
   } catch (error: any) {
     console.error("AI Tutor error:", error);
-    res.status(500).json({
-      error: error?.message || "Failed to process question with AI Tutor.",
-    });
+    const msg = error?.message || "Failed to process question with AI Tutor.";
+    res.status(500).json({ error: msg });
   }
 });
 
-// Quiz Generator endpoint
-app.post("/api/quiz/generate", async (req, res) => {
+// Quiz Generator endpoint (supports both standard and trailing-slash paths)
+app.post(["/api/quiz/generate", "/api/quiz/generate/"], async (req, res) => {
   try {
     const {
       subject = "General Science",
@@ -206,14 +237,13 @@ Requirements for each question:
     res.json(parsed);
   } catch (error: any) {
     console.error("Quiz Generator error:", error);
-    res.status(500).json({
-      error: error?.message || "Failed to generate quiz. Please try again with another topic.",
-    });
+    const msg = error?.message || "Failed to generate quiz. Please try again with another topic.";
+    res.status(500).json({ error: msg });
   }
 });
 
-// Study Notes Generator endpoint
-app.post("/api/notes/generate", async (req, res) => {
+// Study Notes Generator endpoint (supports both standard and trailing-slash paths)
+app.post(["/api/notes/generate", "/api/notes/generate/"], async (req, res) => {
   try {
     const {
       subject = "General Science",
@@ -313,9 +343,8 @@ Content must include:
     res.json(parsed);
   } catch (error: any) {
     console.error("Study Notes error:", error);
-    res.status(500).json({
-      error: error?.message || "Failed to generate study notes.",
-    });
+    const msg = error?.message || "Failed to generate study notes.";
+    res.status(500).json({ error: msg });
   }
 });
 
