@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import app from '../src/server/app';
+import app from '../src/server/app.js';
 
 // Vercel Serverless Function entry point
 // Forwards incoming requests to the decoupled Express application
